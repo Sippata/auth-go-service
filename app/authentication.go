@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/twinj/uuid"
+	"github.com/google/uuid"
 )
 
 // CreateTokens creates a new pair of Access and Refresh Tokens
@@ -32,17 +32,18 @@ func CreateTokens(userID string) (map[string]string, error) {
 		return nil, err
 	}
 
-	var tokensInfo map[string]string
+	tokensInfo := make(map[string]string, 5)
 	tokensInfo["access_token"] = accessToken
 	tokensInfo["access_uuid"] = atUUID
 	tokensInfo["refresh_token"] = refreshToken
 	tokensInfo["refresh_uuid"] = rtUUID
+	tokensInfo["user_id"] = userID
 
 	return tokensInfo, nil
 }
 
 func createToken(userID string, secret string, lifetime int) (string, string, error) {
-	uuid := uuid.NewV4().String()
+	uuid := uuid.New().String()
 	claims := jwt.MapClaims{}
 	claims["id"] = uuid
 	claims["user_id"] = userID

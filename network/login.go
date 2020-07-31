@@ -9,7 +9,7 @@ import (
 
 // LoginHandler handles authentication requests
 type LoginHandler struct {
-	TokenService *app.TokenService
+	TokenService app.TokenService
 }
 
 func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +25,11 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	var tokenPair map[string]string
+	if err = h.saveToken(tokensInfo); err != nil {
+		log.Fatal(err)
+	}
+
+	tokenPair := make(map[string]string, 2)
 	tokenPair["access_token"] = tokensInfo["access_token"]
 	tokenPair["refresh_token"] = tokensInfo["refresh_token"]
 	response, err := json.Marshal(tokenPair)
@@ -35,4 +39,15 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(response)
+}
+
+func (h *LoginHandler) saveToken(tokenInfo map[string]string) error {
+	var rtDetail app.RefreshTokenDetail
+	rtDetail.AccessUUID = tokenInfo["access_uuid"]
+	rtDetail.UUID = tokenInfo["refresh_uuid"]
+	rtDetail.Token = tokenInfo["refresh_token"]
+	rtDetail.UserID = tokenInfo["user_id"]
+
+	err := h.TokenService.Add(&rtDetail)
+	return err
 }

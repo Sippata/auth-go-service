@@ -4,6 +4,7 @@ package app
 type RefreshTokenDetail struct {
 	UUID       string
 	AccessUUID string
+	UserID     string
 	Token      string
 }
 
@@ -14,6 +15,7 @@ func CreateRefreshTokenDetail(m map[string]string) *RefreshTokenDetail {
 	rtDetail.Token = m["refresh_token"]
 	rtDetail.UUID = m["refresh_uuid"]
 	rtDetail.AccessUUID = m["access_uuid"]
+	rtDetail.UserID = m["user_id"]
 	return rtDetail
 }
 
@@ -22,6 +24,7 @@ type TokenService interface {
 	Get(uuid string) (*RefreshTokenDetail, error)
 	GetByAccessUUID(uuid string) (*RefreshTokenDetail, error)
 
-	Create(*RefreshTokenDetail) error
-	Delete(refreshUUID string) error
+	Add(*RefreshTokenDetail) error
+	Remove(refreshUUID string) error
+	RemoveByUserID(userID string) error
 }
