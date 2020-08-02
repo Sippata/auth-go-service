@@ -1,2 +1,7 @@
-api_test/
+src/api_test/
+
+src/vendor
+
 .vscode/
+
+bin/

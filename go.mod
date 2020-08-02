@@ -1,4 +1,4 @@
-module medods-test
+module github.com/Sippata/medods-test
 
 go 1.14
 
