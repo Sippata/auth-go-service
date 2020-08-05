@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -16,11 +17,16 @@ func main() {
 		log.Fatal("Error loading: can't load env file")
 	}
 
-	client, err := mongo.Open()
-	defer mongo.Close(client)
-	dbName := os.Getenv("DB_NAME")
+	var db mongo.MongoDB
+	if err := db.Open(); err != nil {
+		panic(fmt.Sprintf("Db connection fault: %v", err))
+	}
+	defer db.Close()
 
-	tokenService := mongo.TokenService{DB: client.Database(dbName)}
+	tokenService := mongo.TokenService{
+		DB:     db.Client.Database(os.Getenv("DB_NAME")),
+		Client: db.Client,
+	}
 	loginHandler := network.LoginHandler{
 		TokenService: &tokenService,
 	}

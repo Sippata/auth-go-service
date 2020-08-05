@@ -11,7 +11,8 @@ import (
 
 // TokenService is an implementation of the app.TokenService interface for MongoDB
 type TokenService struct {
-	DB *mongo.Database
+	Client *mongo.Client
+	DB     *mongo.Database
 }
 
 // Get refersh token from collection
@@ -25,14 +26,26 @@ func (s *TokenService) Get(token string, userID string) (string, error) {
 	projection := bson.D{{Key: "token", Value: 1}}
 
 	var result app.RefreshToken
-	err := collection.FindOne(
-		context.TODO(),
-		filter,
-		options.FindOne().SetProjection(projection),
-	).Decode(&result)
+
+	session, err := s.Client.StartSession()
 	if err != nil {
 		return "", err
 	}
+	callback := func(sessionCtx mongo.SessionContext) (interface{}, error) {
+		err := collection.FindOne(
+			context.TODO(),
+			filter,
+			options.FindOne().SetProjection(projection),
+		).Decode(&result)
+		if err != nil {
+			return nil, err
+		}
+		return nil, err
+	}
+	if _, err = session.WithTransaction(context.Background(), callback); err != nil {
+		return "", err
+	}
+
 	return result.Token, err
 }
 
@@ -44,7 +57,17 @@ func (s *TokenService) Add(token string, userID string) error {
 		Token:  token,
 	}
 	collection := s.DB.Collection("refresh_tokens")
-	_, err := collection.InsertOne(context.TODO(), elem)
+
+	session, err := s.Client.StartSession()
+	if err != nil {
+		return err
+	}
+	callback := func(sessionCtx mongo.SessionContext) (interface{}, error) {
+		_, err := collection.InsertOne(context.TODO(), elem)
+		return nil, err
+	}
+	_, err = session.WithTransaction(context.Background(), callback)
+
 	return err
 }
 
@@ -56,7 +79,16 @@ func (s *TokenService) Remove(token string, userID string) error {
 	}
 
 	collection := s.DB.Collection("refresh_tokens")
-	_, err := collection.DeleteOne(context.TODO(), filter)
+	session, err := s.Client.StartSession()
+	if err != nil {
+		return err
+	}
+	callback := func(sessionCtx mongo.SessionContext) (interface{}, error) {
+		_, err := collection.DeleteOne(context.TODO(), filter)
+		return nil, err
+	}
+	_, err = session.WithTransaction(context.Background(), callback)
+
 	return err
 }
 
@@ -66,6 +98,15 @@ func (s *TokenService) RemoveByUserID(userID string) error {
 	filter := bson.D{{Key: "userid", Value: userID}}
 
 	collection := s.DB.Collection("refersh_tokens")
-	_, err := collection.DeleteMany(context.TODO(), filter)
+	session, err := s.Client.StartSession()
+	if err != nil {
+		return err
+	}
+	callback := func(sessionCtx mongo.SessionContext) (interface{}, error) {
+		_, err := collection.DeleteMany(context.TODO(), filter)
+		return nil, err
+	}
+	_, err = session.WithTransaction(context.Background(), callback)
+
 	return err
 }
