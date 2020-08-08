@@ -1,7 +1,9 @@
-src/api_test/
+api_test/
 
 src/vendor
 
 .vscode/
 
 bin/
+
+.env

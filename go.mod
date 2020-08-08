@@ -1,4 +1,4 @@
-module github.com/Sippata/medods-test
+module github.com/Sippata/auth-go-service
 
 go 1.14
 
