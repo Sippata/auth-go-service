@@ -26,14 +26,15 @@ func JwtMiddleware(next http.Handler) http.Handler {
 		if err != nil {
 			log.Print("Forbidden: " + err.Error())
 			w.WriteHeader(http.StatusForbidden)
-			w.Write([]byte("Invalid token"))
+			w.Write([]byte("Token expired"))
 			return
 		}
-		if claims, ok := token.Claims.(jwt.StandardClaims); ok && token.Valid {
+		if claims, ok := token.Claims.(*jwt.StandardClaims); ok && token.Valid {
 			oldContext := r.Context()
-			ctx := context.WithValue(oldContext, "claims", claims)
+			ctx := context.WithValue(oldContext, "claims", *claims)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
+			w.Write([]byte("Invalid token"))
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
