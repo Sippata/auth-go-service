@@ -1,7 +1,6 @@
 package network
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/Sippata/auth-go-service/app"
@@ -17,13 +16,7 @@ type AllLogout struct {
 func (h *AllLogout) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	accessClaims := r.Context().Value("claims").(jwt.StandardClaims)
 
-	var body requestBody
-	err := json.NewDecoder(r.Body).Decode(&body)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-	}
-
-	err = h.TokenService.RemoveByUserID(accessClaims.Subject)
+	err := h.TokenService.RemoveByUserID(accessClaims.Subject)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
