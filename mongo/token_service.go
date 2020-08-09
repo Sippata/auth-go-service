@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // TokenService is an implementation of the app.TokenService interface for MongoDB
@@ -17,10 +18,11 @@ type TokenService struct {
 
 // Get refersh token from collection
 func (s *TokenService) Get(token string, userID string) (string, error) {
+	hash, _ := bcrypt.GenerateFromPassword([]byte(token), bcrypt.MaxCost)
 
 	filter := app.RefreshToken{
-		UserID: userID,
-		Token:  token,
+		UserID:    userID,
+		TokenHash: hash,
 	}
 	projection := bson.D{{Key: "token", Value: 1}}
 
@@ -35,15 +37,16 @@ func (s *TokenService) Get(token string, userID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return result.Token, err
+	return string(result.TokenHash), err
 }
 
 // Add given refresh token in collection or return error
 // if operation is failure
 func (s *TokenService) Add(token string, userID string) error {
+	hash, _ := bcrypt.GenerateFromPassword([]byte(token), bcrypt.MaxCost)
 	elem := app.RefreshToken{
-		UserID: userID,
-		Token:  token,
+		UserID:    userID,
+		TokenHash: hash,
 	}
 	err := s.Instance.WithTransaction(func() error {
 		_, err := s.Collection.InsertOne(context.TODO(), elem)
@@ -54,9 +57,11 @@ func (s *TokenService) Add(token string, userID string) error {
 
 // Remove refresh token from the collection using a uuid match
 func (s *TokenService) Remove(token string, userID string) error {
+	hash, _ := bcrypt.GenerateFromPassword([]byte(token), bcrypt.MaxCost)
+
 	filter := bson.D{
 		{Key: "userid", Value: userID},
-		{Key: "token", Value: token},
+		{Key: "tokenhash", Value: hash},
 	}
 
 	err := s.Instance.WithTransaction(func() error {

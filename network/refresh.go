@@ -32,7 +32,7 @@ func (h *RefreshHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	if token != "" {
+	if token == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Given refresh token does not associate with this access token"))
 	}
