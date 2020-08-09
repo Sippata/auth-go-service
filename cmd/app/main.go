@@ -48,6 +48,7 @@ func main() {
 	http.Handle("/logout", network.JwtMiddleware(&logoutHandler))
 	http.Handle("/logout/all", network.JwtMiddleware(&allLogoutHandler))
 
-	log.Print("Run server on http://127.0.0.1:3000/")
-	log.Fatal(http.ListenAndServe(":3000", nil))
+	port := os.Getenv("PORT")
+	log.Print("Run server on port: " + port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
