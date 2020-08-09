@@ -47,7 +47,7 @@ func (h *RefreshHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check that the refresh token associate with the access token
-	tokenHash, err := h.TokenService.Get(body.Token, accessClaims.Subject)
+	tokenHash, err := h.TokenService.Get(rtClaims.Id)
 	if err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -60,7 +60,7 @@ func (h *RefreshHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.TokenService.Remove(body.Token, accessClaims.Subject)
+	h.TokenService.Remove(rtClaims.Id)
 
 	// Create new token pair
 	tokenPair, err := app.CreateTokens(accessClaims.Subject)
@@ -69,8 +69,8 @@ func (h *RefreshHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	if err = h.TokenService.Add(tokenPair["refresh_token"], accessClaims.Subject); err != nil {
+	rt, _ := app.ParseToken(tokenPair["refresh_token"], []byte(os.Getenv("REFRESH_SECRET")))
+	if err = h.TokenService.Add(rt); err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

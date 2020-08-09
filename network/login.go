@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/Sippata/auth-go-service/app"
 )
@@ -28,8 +29,8 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	if err = h.TokenService.Add(tokenPair["refresh_token"], userid); err != nil {
+	rt, _ := app.ParseToken(tokenPair["refresh_token"], []byte(os.Getenv("REFRESH_SECRET")))
+	if err = h.TokenService.Add(rt); err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

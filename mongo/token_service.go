@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Sippata/auth-go-service/app"
+	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -15,14 +16,9 @@ type TokenService struct {
 	Collection *mongo.Collection
 }
 
-// Get refersh token from collection
-func (s *TokenService) Get(token string, userID string) (string, error) {
-	hash, _ := app.GenerateHash(token)
-
-	filter := app.RefreshToken{
-		UserID:    userID,
-		TokenHash: hash,
-	}
+// Get refersh token from collection by uuid
+func (s *TokenService) Get(uuid string) (string, error) {
+	filter := bson.D{{Key: "id", Value: uuid}}
 	projection := bson.D{{Key: "tokenhash", Value: 1}}
 
 	var result app.RefreshToken
@@ -36,15 +32,17 @@ func (s *TokenService) Get(token string, userID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(result.TokenHash), err
+	return result.TokenHash, err
 }
 
 // Add given refresh token in collection or return error
 // if operation is failure
-func (s *TokenService) Add(token string, userID string) error {
-	hash, _ := app.GenerateHash(token)
+func (s *TokenService) Add(token *jwt.Token) error {
+	hash, _ := app.GenerateHash(token.Raw)
+	claims, _ := token.Claims.(*jwt.StandardClaims)
 	elem := app.RefreshToken{
-		UserID:    userID,
+		ID:        claims.Id,
+		UserID:    claims.Subject,
 		TokenHash: hash,
 	}
 	err := s.Instance.WithTransaction(func() error {
@@ -55,12 +53,9 @@ func (s *TokenService) Add(token string, userID string) error {
 }
 
 // Remove refresh token from the collection using a uuid match
-func (s *TokenService) Remove(token string, userID string) error {
-	hash, _ := app.GenerateHash(token)
-
+func (s *TokenService) Remove(uuid string) error {
 	filter := bson.D{
-		{Key: "userid", Value: userID},
-		{Key: "tokenhash", Value: hash},
+		{Key: "id", Value: uuid},
 	}
 
 	err := s.Instance.WithTransaction(func() error {

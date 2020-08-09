@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/Sippata/auth-go-service/app"
 
@@ -16,8 +17,6 @@ type LogoutHandler struct {
 }
 
 func (h *LogoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	accessClaims := r.Context().Value("claims").(jwt.StandardClaims)
-
 	var body requestBody
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
@@ -26,7 +25,17 @@ func (h *LogoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.TokenService.Remove(body.Token, accessClaims.Subject)
+	rt, err := app.ParseToken(body.Token, []byte(os.Getenv("REFRESH_SECRET")))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	claims, ok := rt.Claims.(*jwt.StandardClaims)
+	if !rt.Valid || !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	err = h.TokenService.Remove(claims.Id)
 	if err != nil {
 		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)

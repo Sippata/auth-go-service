@@ -1,20 +1,24 @@
 package app
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
+)
 
 // RefreshToken scheme
 type RefreshToken struct {
+	ID        string
 	UserID    string
 	TokenHash string
 }
 
 // RefreshTokenService provide functionality to serve Token
 type RefreshTokenService interface {
-	Get(string, string) (string, error)
+	Get(uuid string) (string, error)
 
-	Add(string, string) error
-	Remove(string, string) error
-	RemoveByUserID(string) error
+	Add(*jwt.Token) error
+	Remove(uuid string) error
+	RemoveByUserID(uuid string) error
 }
 
 // Compare hash and token
