@@ -16,6 +16,7 @@ type LoginHandler struct {
 func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["client_id"]
 	if !ok || len(keys[0]) < 1 {
+		w.Write([]byte("Missing client id"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
