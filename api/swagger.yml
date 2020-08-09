@@ -97,7 +97,7 @@ securityDefinitions:
   auth_go:
     type: oauth2
     flow: implicit
-    authorizationUrl: http://host/login
+    authorizationUrl: https://hidden-dawn-44552.herokuapp.com/login
     
     
 definitions:
