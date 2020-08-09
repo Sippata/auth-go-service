@@ -17,7 +17,7 @@ type RefreshHandler struct {
 }
 
 type requestBody struct {
-	Token string `json:"refrsh_token"`
+	Token string `json:"refresh_token"`
 }
 
 func (h *RefreshHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -28,6 +28,7 @@ func (h *RefreshHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Write([]byte("Missing refresh token"))
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	// Check that the refresh token is valid
