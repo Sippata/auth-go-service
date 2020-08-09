@@ -14,7 +14,7 @@ type LoginHandler struct {
 }
 
 func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	keys, ok := r.URL.Query()["userid"]
+	keys, ok := r.URL.Query()["client_id"]
 	if !ok || len(keys[0]) < 1 {
 		w.WriteHeader(http.StatusBadRequest)
 		return
