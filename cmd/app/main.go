@@ -7,16 +7,9 @@ import (
 
 	"github.com/Sippata/auth-go-service/mongo"
 	"github.com/Sippata/auth-go-service/network"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		// log.Fatal("Error loading: can't load env file")
-		panic(err)
-	}
-
 	var instance mongo.DBInstance
 	if err := instance.Open(); err != nil {
 		log.Fatal(err)
