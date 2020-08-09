@@ -2,6 +2,7 @@ package network
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/Sippata/auth-go-service/app"
@@ -20,12 +21,16 @@ func (h *LogoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var body requestBody
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
+		w.Write([]byte("Missing refresh token"))
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	err = h.TokenService.Remove(body.Token, accessClaims.Subject)
 	if err != nil {
+		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 }

@@ -1,6 +1,7 @@
 package network
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/Sippata/auth-go-service/app"
@@ -18,7 +19,9 @@ func (h *AllLogout) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err := h.TokenService.RemoveByUserID(accessClaims.Subject)
 	if err != nil {
+		log.Fatal(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
