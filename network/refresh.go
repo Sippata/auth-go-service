@@ -46,18 +46,18 @@ func (h *RefreshHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check that the refresh token associate with the access token
-	if rtClaims.Audience != accessClaims.Id {
+	tokenHash, err := h.TokenService.Get(body.Token, accessClaims.Subject)
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = app.Compare(tokenHash, body.Token)
+	if err != nil || rtClaims.Audience != accessClaims.Id {
 		w.Write([]byte("Given refresh token does not associate with this access token"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	// ? check that the refresh token in db
-
-	// tokenHash, err := h.TokenService.Get(body.Token, accessClaims.Subject)
-	// if err != nil {
-	// 	w.WriteHeader(http.StatusInternalServerError)
-	// }
 
 	h.TokenService.Remove(body.Token, accessClaims.Subject)
 
