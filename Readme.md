@@ -6,4 +6,4 @@ Authorization service on Go using JWT.
 > make
 ```
 ### Or try it on
-(heroku)[https://hidden-dawn-44552.herokuapp.com/]
+[heroku](https://hidden-dawn-44552.herokuapp.com/)
